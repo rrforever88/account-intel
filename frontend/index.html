@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Intel</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f4f4f4; }
+        h1 { color: #333; }
+        .filters { margin-bottom: 20px; }
+        select { padding: 8px; margin-right: 10px; border-radius: 4px; border: 1px solid #ccc; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th { background: #333; color: white; padding: 10px; text-align: left; }
+        td { padding: 10px; border-bottom: 1px solid #ddd; }
+        tr:hover { background: #f0f0f0; }
+        .badge { padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+        .Active { background: #d4edda; color: #155724; }
+        .At-Risk { background: #fff3cd; color: #856404; }
+        .Churned { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>Account Intel Dashboard</h1>
+
+    <div class="filters">
+        <select id="segmentFilter">
+            <option value="">All Segments</option>
+            <option value="Enterprise">Enterprise</option>
+            <option value="Mid-Market">Mid-Market</option>
+            <option value="SMB">SMB</option>
+        </select>
+
+        <select id="statusFilter">
+            <option value="">All Statuses</option>
+            <option value="Active">Active</option>
+            <option value="At Risk">At Risk</option>
+            <option value="Churned">Churned</option>
+        </select>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Industry</th>
+                <th>Segment</th>
+                <th>Region</th>
+                <th>Activity Score</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="accountTable">
+        </tbody>
+    </table>
+
+    <script>
+        const API = "http://127.0.0.1:8000";
+        let allAccounts = [];
+
+        async function fetchAccounts() {
+            const response = await fetch(`${API}/accounts`);
+            allAccounts = await response.json();
+            renderTable(allAccounts);
+        }
+
+        function renderTable(accounts) {
+            const tbody = document.getElementById("accountTable");
+            tbody.innerHTML = "";
+            accounts.forEach(account => {
+                const statusClass = account.status.replace(" ", "-");
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${account.name}</td>
+                        <td>${account.industry}</td>
+                        <td>${account.segment}</td>
+                        <td>${account.region}</td>
+                        <td>${account.activity_score}</td>
+                        <td><span class="badge ${statusClass}">${account.status}</span></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function applyFilters() {
+            const segment = document.getElementById("segmentFilter").value;
+            const status = document.getElementById("statusFilter").value;
+
+            let filtered = allAccounts;
+            if (segment) filtered = filtered.filter(a => a.segment === segment);
+            if (status) filtered = filtered.filter(a => a.status === status);
+
+            renderTable(filtered);
+        }
+
+        document.getElementById("segmentFilter").addEventListener("change", applyFilters);
+        document.getElementById("statusFilter").addEventListener("change", applyFilters);
+
+        fetchAccounts();
+    </script>
+</body>
+</html>
